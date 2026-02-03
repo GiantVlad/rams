@@ -30,31 +30,31 @@ class RamsGameApiTest extends TestCase
         $create = $this->postJson('/api/games', ['seed' => 123]);
         $gameId = $create->json('game.id');
 
-        // Human is player 0. Dealer is 0. 
+        // Human is player 0. Dealer is 0.
         // Order: 1 -> 2 -> 3 -> 0
-        
+
         // Player 1 exchange
         $this->postJson("/api/games/{$gameId}/exchange", [
             'player_index' => 1,
-            'discard_card_ids' => []
+            'discard_card_ids' => [],
         ])->assertOk();
 
         // Player 2 exchange
         $this->postJson("/api/games/{$gameId}/exchange", [
             'player_index' => 2,
-            'discard_card_ids' => []
+            'discard_card_ids' => [],
         ])->assertOk();
 
         // Player 3 exchange
         $this->postJson("/api/games/{$gameId}/exchange", [
             'player_index' => 3,
-            'discard_card_ids' => []
+            'discard_card_ids' => [],
         ])->assertOk();
 
         // Player 0 (human) exchange
         $res = $this->postJson("/api/games/{$gameId}/exchange", [
             'player_index' => 0,
-            'discard_card_ids' => []
+            'discard_card_ids' => [],
         ]);
         $res->assertOk();
 
@@ -99,7 +99,7 @@ class RamsGameApiTest extends TestCase
 
         $this->postJson("/api/games/{$gameId}/move", [
             'player_index' => $currentPlayer,
-            'card_id' => $cardToPlay
+            'card_id' => $cardToPlay,
         ])->assertOk();
 
         $state = $this->getJson("/api/games/{$gameId}");

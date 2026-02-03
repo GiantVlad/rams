@@ -6,7 +6,7 @@ on:
 
 jobs:
   laravel-quality:
-    name: Audit & Pint
+    name: Audit Pint Test
     runs-on: ubuntu-latest
     defaults:
       run:

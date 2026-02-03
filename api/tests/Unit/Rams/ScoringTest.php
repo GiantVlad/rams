@@ -42,7 +42,7 @@ class ScoringTest extends TestCase
         $tricks = [0 => 1, 1 => 1, 2 => 1, 3 => 2];
         $maltzy = [0 => 1, 1 => 0, 2 => 0, 3 => 0];
         $piles = [0 => 20, 1 => 20, 2 => 20, 3 => 20];
-        
+
         $newPiles = Scoring::applyRoundScoring($tricks, $maltzy, $piles);
 
         $this->assertEquals(14, $newPiles[0]); // 20 - 1 (trick) - 5 (maltzy)
