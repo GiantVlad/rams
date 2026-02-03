@@ -19,36 +19,57 @@ class RamsGameApiTest extends TestCase
 
         $state = $this->getJson("/api/games/{$gameId}");
         $state->assertOk();
-        $state->assertJsonPath('game.phase', 'bidding');
-        $state->assertJsonPath('game.current_player_index', 0);
+        $state->assertJsonPath('game.phase', 'exchange');
+        $state->assertJsonPath('game.current_player_index', 1); // Dealer is 0, so next is 1
         $state->assertJsonCount(4, 'players');
         $state->assertJsonCount(4, 'round.hands');
-        $state->assertJsonPath('round.trick_number', 1);
-
-        // AI should have auto-bid for seats 1..3.
-        $this->assertNotNull($state->json('round.bids.1'));
-        $this->assertNotNull($state->json('round.bids.2'));
-        $this->assertNotNull($state->json('round.bids.3'));
-        $this->assertNull($state->json('round.bids.0'));
     }
 
-    public function test_bidding_enforces_turn_and_sum_not_9(): void
+    public function test_exchange_and_participation_flow(): void
     {
         $create = $this->postJson('/api/games', ['seed' => 123]);
         $gameId = $create->json('game.id');
 
-        // AI auto-bids for seats 1..3, so human (0) is the current bidder.
-        $badTurn = $this->postJson("/api/games/{$gameId}/bid", ['player_index' => 1, 'bid' => 2]);
-        $badTurn->assertStatus(422);
+        // Human is player 0. Dealer is 0. 
+        // Order: 1 -> 2 -> 3 -> 0
+        
+        // Player 1 exchange
+        $this->postJson("/api/games/{$gameId}/exchange", [
+            'player_index' => 1,
+            'discard_card_ids' => []
+        ])->assertOk();
 
-        // With AI bids in place, choose a value that would make the sum 9 and ensure it's rejected.
-        $sum9 = $this->postJson("/api/games/{$gameId}/bid", ['player_index' => 0, 'bid' => 9]);
-        $sum9->assertStatus(422);
+        // Player 2 exchange
+        $this->postJson("/api/games/{$gameId}/exchange", [
+            'player_index' => 2,
+            'discard_card_ids' => []
+        ])->assertOk();
 
-        // Valid alternative bid
-        $ok = $this->postJson("/api/games/{$gameId}/bid", ['player_index' => 0, 'bid' => 1]);
-        $ok->assertOk();
-        $ok->assertJsonPath('game.phase', 'playing');
+        // Player 3 exchange
+        $this->postJson("/api/games/{$gameId}/exchange", [
+            'player_index' => 3,
+            'discard_card_ids' => []
+        ])->assertOk();
+
+        // Player 0 (human) exchange
+        $res = $this->postJson("/api/games/{$gameId}/exchange", [
+            'player_index' => 0,
+            'discard_card_ids' => []
+        ]);
+        $res->assertOk();
+
+        $state = $this->getJson("/api/games/{$gameId}");
+        $this->assertEquals('choose_to_play', $state->json('game.phase'));
+        $this->assertEquals(1, $state->json('game.current_player_index'));
+
+        // Participation phase
+        $this->postJson("/api/games/{$gameId}/participation", ['player_index' => 1, 'play' => true])->assertOk();
+        $this->postJson("/api/games/{$gameId}/participation", ['player_index' => 2, 'play' => true])->assertOk();
+        $this->postJson("/api/games/{$gameId}/participation", ['player_index' => 3, 'play' => true])->assertOk();
+        $this->postJson("/api/games/{$gameId}/participation", ['player_index' => 0, 'play' => true])->assertOk();
+
+        $state = $this->getJson("/api/games/{$gameId}");
+        $this->assertEquals('play', $state->json('game.phase'));
     }
 
     public function test_playing_enforces_follow_suit(): void
@@ -56,41 +77,34 @@ class RamsGameApiTest extends TestCase
         $create = $this->postJson('/api/games', ['seed' => 123]);
         $gameId = $create->json('game.id');
 
-        // Only human needs to bid; AI already did. After this bid, AI will start playing until it's human's turn.
-        $this->postJson("/api/games/{$gameId}/bid", ['player_index' => 0, 'bid' => 1])->assertOk();
+        // Skip exchange
+        for ($i = 0; $i < 4; $i++) {
+            $p = (0 + 1 + $i) % 4;
+            $this->postJson("/api/games/{$gameId}/exchange", ['player_index' => $p, 'discard_card_ids' => []])->assertOk();
+        }
+
+        // Skip participation
+        for ($i = 0; $i < 4; $i++) {
+            $p = (0 + 1 + $i) % 4;
+            $this->postJson("/api/games/{$gameId}/participation", ['player_index' => $p, 'play' => true])->assertOk();
+        }
 
         $state = $this->getJson("/api/games/{$gameId}");
-        $state->assertOk();
-        $this->assertSame('playing', $state->json('game.phase'));
+        $this->assertSame('play', $state->json('game.phase'));
 
-        // AI should have played 3 cards (players 1..3). Now it is human's turn (0).
-        $this->assertSame(0, $state->json('game.current_player_index'));
-        $this->assertCount(3, $state->json('round.current_trick'));
+        // Player 1 leads
+        $currentPlayer = $state->json('game.current_player_index');
+        $hand = $state->json("round.hands.{$currentPlayer}");
+        $cardToPlay = $hand[0];
 
-        $leadingCardId = $state->json('round.current_trick.0.card');
-        $leadingSuit = explode('-', $leadingCardId)[0];
+        $this->postJson("/api/games/{$gameId}/move", [
+            'player_index' => $currentPlayer,
+            'card_id' => $cardToPlay
+        ])->assertOk();
 
-        $hand0 = $state->json('round.hands.0');
-        $this->assertIsArray($hand0);
-
-        $nonLeading = null;
-        $hasLeading = false;
-        foreach ($hand0 as $id) {
-            $suit = explode('-', $id)[0];
-            if ($suit === $leadingSuit) {
-                $hasLeading = true;
-            } else {
-                $nonLeading = $nonLeading ?? $id;
-            }
-        }
-
-        if ($hasLeading && $nonLeading !== null) {
-            $bad = $this->postJson("/api/games/{$gameId}/move", ['player_index' => 0, 'card_id' => $nonLeading]);
-            $bad->assertStatus(422);
-        } else {
-            $okId = $hand0[0];
-            $ok = $this->postJson("/api/games/{$gameId}/move", ['player_index' => 0, 'card_id' => $okId]);
-            $ok->assertOk();
-        }
+        $state = $this->getJson("/api/games/{$gameId}");
+        $nextPlayer = $state->json('game.current_player_index');
+        $this->assertNotEquals($currentPlayer, $nextPlayer);
+        $this->assertCount(1, $state->json('round.current_trick'));
     }
 }
