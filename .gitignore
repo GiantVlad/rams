@@ -1,0 +1,36 @@
+yes # Dependencies
+/node_modules
+/api/vendor
+/web/node_modules
+
+# Environment
+.env
+api/.env
+web/.env
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build/Dist
+/web/dist
+/api/public/build
+/api/storage/*.key
+
+# Laravel Specific
+/api/storage/framework/cache/data/*
+/api/storage/framework/sessions/*
+/api/storage/framework/testing/*
+/api/storage/framework/views/*
+/api/storage/logs/*
+/api/bootstrap/cache/*
+
+# Gemini CLI / Skill artifacts
+.gemini/tmp/
+*.skill
