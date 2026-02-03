@@ -1,4 +1,4 @@
-Youyou# Rams Card Game
+create # Rams Card Game
 
 A multiplayer card game implementation with real-time updates, featuring a 4-player setup with AI opponents.
 
