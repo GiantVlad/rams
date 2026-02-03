@@ -16,7 +16,7 @@ class TrickRulesTest extends TestCase
         // Lead: ♥
         // Player plays 7♦ (Slough)
         // Should NOT throw exception
-        
+
         $hand = [
             new Card(Suit::Diamonds, Rank::Seven),
             new Card(Suit::Clubs, Rank::Seven),
@@ -41,17 +41,17 @@ class TrickRulesTest extends TestCase
         // Lead: ♥
         // Player plays 7♦
         // Should throw exception
-        
+
         $hand = [
             new Card(Suit::Hearts, Rank::Seven),
             new Card(Suit::Diamonds, Rank::Seven),
         ];
         $cardToPlay = new Card(Suit::Diamonds, Rank::Seven);
         $leadingSuit = Suit::Hearts;
-        
+
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Must follow suit when possible');
-        
+
         TrickRules::assertLegalPlay($cardToPlay, $hand, $leadingSuit);
     }
 }
