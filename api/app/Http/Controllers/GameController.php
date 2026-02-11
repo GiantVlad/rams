@@ -19,9 +19,26 @@ class GameController extends Controller
             return response()->json(['message' => 'seed must be an integer'], 422);
         }
 
-        $game = $this->service->createGame($seed);
+        $sessionId = $request->header('X-Player-Session-ID');
+        $game = $this->service->createGame($seed, $sessionId);
 
         return response()->json($this->service->getState($game), 201);
+    }
+
+    public function resume(Request $request): JsonResponse
+    {
+        $sessionId = $request->header('X-Player-Session-ID');
+        if (! $sessionId) {
+            return response()->json(['message' => 'Session ID required'], 400);
+        }
+
+        $game = $this->service->resumeGame($sessionId);
+
+        if (! $game) {
+            return response()->json(['message' => 'No active game found'], 404);
+        }
+
+        return response()->json($this->service->getState($game));
     }
 
     public function show(Game $game): JsonResponse

@@ -5,6 +5,7 @@ use App\Http\Controllers\GameController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/games', [GameController::class, 'store']);
+Route::get('/games/resume', [GameController::class, 'resume']);
 Route::get('/games/{game}', [GameController::class, 'show']);
 Route::post('/games/{game}/exchange', [GameController::class, 'exchange']);
 Route::post('/games/{game}/move', [GameController::class, 'move']);

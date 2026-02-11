@@ -52,9 +52,9 @@ final class GameService
         curl_close($ch);
     }
 
-    public function createGame(?int $seed = null): Game
+    public function createGame(?int $seed = null, ?string $sessionId = null): Game
     {
-        $game = DB::transaction(function () use ($seed) {
+        $game = DB::transaction(function () use ($seed, $sessionId) {
             $dealerIndex = 0;
 
             $game = Game::create([
@@ -73,6 +73,7 @@ final class GameService
                     'score' => 0,
                     'pile' => 20,
                     'maltzy_count' => 0,
+                    'session_id' => $i === 0 ? $sessionId : null,
                 ]);
             }
 
@@ -86,6 +87,16 @@ final class GameService
         $this->broadcastGameUpdate($game, 'game.created');
 
         return $game;
+    }
+
+    public function resumeGame(string $sessionId): ?Game
+    {
+        return Game::where('status', 'in_progress')
+            ->whereHas('players', function ($query) use ($sessionId) {
+                $query->where('session_id', $sessionId);
+            })
+            ->latest('created_at')
+            ->first();
     }
 
     public function getState(Game $game): array

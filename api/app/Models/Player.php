@@ -14,6 +14,7 @@ class Player extends Model
         'score',
         'pile',
         'maltzy_count',
+        'session_id',
     ];
 
     protected function casts(): array

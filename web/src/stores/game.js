@@ -5,6 +5,7 @@ import { wsClient } from '../websocket'
 export const useGameStore = defineStore('game', {
       state: () => ({
       state: null,
+      resumableGame: null,
       loading: false,
       error: null,
           discardCardIds: [],
@@ -17,6 +18,16 @@ export const useGameStore = defineStore('game', {
         }),
         getters: {
           gameId: (s) => s.state?.game?.id ?? null,
+          // ... (keep existing getters)
+          resumableGameSummary: (s) => {
+            if (!s.resumableGame) return null
+            const g = s.resumableGame.game
+            return {
+              id: g.id,
+              round: g.round_number,
+              phase: g.phase
+            }
+          },
           phase: (s) => s.state?.game?.phase ?? null,
           currentPlayerIndex: (s) => s.state?.game?.current_player_index ?? null,
           humanIndex: () => 0,
@@ -127,6 +138,7 @@ export const useGameStore = defineStore('game', {
             this.error = null
             this.justFinishedRound = null
             this.lastRoundTaken = null
+            this.resumableGame = null
             this.discardCardIds = []
             
             // Clear any existing polling
@@ -157,6 +169,59 @@ export const useGameStore = defineStore('game', {
             } finally {
               this.loading = false
             }
+          },
+
+          async checkResume() {
+            this.loading = true
+            this.error = null
+            this.resumableGame = null
+            try {
+              const data = await apiFetch('/api/games/resume', { method: 'GET' })
+              this.resumableGame = data
+              return true
+            } catch (e) {
+              // If 404, that's fine, just means no active game
+              if (e.status !== 404) {
+                 console.error('Error checking resume:', e)
+              }
+              return false
+            } finally {
+              this.loading = false
+            }
+          },
+
+          confirmResume() {
+            if (!this.resumableGame) return
+
+            const data = this.resumableGame
+            this.resumableGame = null // Clear temp state
+            
+            // Connect to WebSocket
+            wsClient.connect(data.game.id)
+            wsClient.on('game.update', (update) => {
+               console.log('Received game update:', update)
+               this.handleStateUpdate(update)
+               
+               if (update.game.current_player_index !== 0 && update.game.status === 'in_progress') {
+                 this.triggerAiMove()
+               }
+            })
+            
+            this.state = data
+          },
+
+          abandonResume() {
+            this.resumableGame = null
+          },
+
+          // Kept for backward compatibility if needed, but mostly replaced by checkResume + confirmResume
+          async resumeGame() {
+            const found = await this.checkResume()
+            if (found) {
+              this.confirmResume()
+              return true
+            }
+            return false
           },
       
           startPolling() {

@@ -22,12 +22,8 @@ const statusLine = computed(() => {
   return `Game #${id} · ${phaseLabel} Phase · Turn: ${game.getPlayerName(turn)}`
 })
 
-onMounted(() => {
-  // Initial check or load?
-  // game.refresh() is good if we are reloading page
-  if (game.gameId) {
-      game.refresh()
-  }
+onMounted(async () => {
+  await game.checkResume()
 })
 </script>
 
@@ -71,6 +67,21 @@ onMounted(() => {
       </aside>
     </main>
 
+    <!-- Resume Prompt -->
+    <div v-else-if="game.resumableGame" class="modal-overlay">
+      <div class="modal-card">
+        <h2>Active Game Found</h2>
+        <p>
+          You have an unfinished game (ID: {{ game.resumableGameSummary.id }}).<br>
+          Round {{ game.resumableGameSummary.round }} - {{ game.resumableGameSummary.phase }} phase.
+        </p>
+        <div class="modal-actions">
+          <button class="btn-primary" @click="game.confirmResume()">Continue Game</button>
+          <button class="btn-secondary" @click="game.abandonResume()">Start New Game</button>
+        </div>
+      </div>
+    </div>
+
     <div v-else class="loading-screen">
       <h1>Rams</h1>
       <p>Waiting for game data...</p>
@@ -94,6 +105,72 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* ... (keep existing styles) */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  backdrop-filter: blur(5px);
+}
+
+.modal-card {
+  background: #1f2937;
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid #4b5563;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-card h2 {
+  color: #60a5fa;
+  margin-top: 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid #4b5563;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #374151;
+  color: white;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
