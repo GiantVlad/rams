@@ -8,9 +8,12 @@ class WebSocketClient {
   }
 
   connect(gameId) {
+    if (this.ws) {
+      this.disconnect()
+    }
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.hostname
-    const port = window.location.port ? `:${window.location.port}` : ''
     const wsUrl = `${protocol}//${host}:8080`
     
     console.log('Connecting to WebSocket:', wsUrl)
@@ -78,6 +81,15 @@ class WebSocketClient {
     this.listeners[event].push(callback)
   }
 
+  removeAllListeners(event) {
+    if (event) {
+      this.listeners[event] = []
+      return
+    }
+
+    this.listeners = {}
+  }
+
   emit(event, data) {
     if (this.listeners[event]) {
       this.listeners[event].forEach(callback => callback(data))
@@ -86,6 +98,7 @@ class WebSocketClient {
 
   disconnect() {
     if (this.ws) {
+      this.ws.onclose = null
       this.ws.close()
       this.ws = null
     }

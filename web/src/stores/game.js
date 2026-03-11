@@ -13,6 +13,8 @@ export const useGameStore = defineStore('game', {
           lastRoundTaken: null,
           pollingInterval: null,
           processingAiMove: false,
+          aiMoveTimeoutId: null,
+          pendingAiMoveKey: null,
           pendingUpdates: [],
           isDisplayingTrickResult: false,
         }),
@@ -85,10 +87,94 @@ export const useGameStore = defineStore('game', {
           }
         },
         actions: {
-          handleStateUpdate(newState) {
-              // Always reset processing flag on state update reception (it comes from server)
-              this.processingAiMove = false
+          initializeRealtime(gameId) {
+            wsClient.removeAllListeners('game.update')
+            wsClient.connect(gameId)
+            wsClient.on('game.update', (update) => {
+              console.log('Received game update:', update)
+              this.handleStateUpdate(update)
+            })
+          },
 
+          shouldAutoPlayAi(gameState = this.state) {
+            return Boolean(
+              gameState &&
+              gameState.game?.status === 'in_progress' &&
+              gameState.game?.current_player_index !== 0
+            )
+          },
+
+          getAiMoveKey(gameState = this.state) {
+            const game = gameState?.game
+            if (!game) return null
+
+            return `${game.id}:${game.phase}:${game.current_player_index}:${game.round_number}`
+          },
+
+          cancelScheduledAiMove() {
+            if (this.aiMoveTimeoutId) {
+              clearTimeout(this.aiMoveTimeoutId)
+            }
+
+            this.aiMoveTimeoutId = null
+            this.pendingAiMoveKey = null
+            this.processingAiMove = false
+          },
+
+          scheduleAiMove(gameState = this.state) {
+            if (!this.shouldAutoPlayAi(gameState)) {
+              this.cancelScheduledAiMove()
+              return
+            }
+
+            const nextMoveKey = this.getAiMoveKey(gameState)
+            if (this.pendingAiMoveKey === nextMoveKey) {
+              return
+            }
+
+            if (this.aiMoveTimeoutId) {
+              clearTimeout(this.aiMoveTimeoutId)
+            }
+
+            this.pendingAiMoveKey = nextMoveKey
+            this.processingAiMove = true
+
+            console.log('AI move planned in 1.5s...')
+
+            this.aiMoveTimeoutId = setTimeout(async () => {
+              const requestKey = this.pendingAiMoveKey
+              this.aiMoveTimeoutId = null
+
+              if (!requestKey || this.getAiMoveKey() !== requestKey || !this.shouldAutoPlayAi()) {
+                if (this.pendingAiMoveKey === requestKey) {
+                  this.pendingAiMoveKey = null
+                  this.processingAiMove = false
+                }
+
+                return
+              }
+
+              try {
+                console.log('Making AI move request...')
+                await apiFetch(`/api/games/${this.gameId}/ai-play`, {
+                  method: 'POST'
+                })
+                console.log('AI move requested')
+              } catch (e) {
+                const staleRequest = e.status === 400 && !this.shouldAutoPlayAi()
+                if (!staleRequest) {
+                  console.error('Error triggering AI move:', e)
+                }
+              } finally {
+                if (this.pendingAiMoveKey === requestKey) {
+                  this.pendingAiMoveKey = null
+                  this.processingAiMove = false
+                }
+              }
+            }, 1500)
+          },
+
+          handleStateUpdate(newState) {
               // If we are currently showing a full trick result, queue any incoming updates (like the cleared trick state)
               if (this.isDisplayingTrickResult) {
                   this.pendingUpdates.push(newState)
@@ -97,6 +183,7 @@ export const useGameStore = defineStore('game', {
 
               // Apply state logic
               this.applyState(newState)
+              this.scheduleAiMove(newState)
 
               // Check if this new state is a "Full Trick" that requires a viewing pause
               if (newState?.round?.current_trick) {
@@ -149,21 +236,10 @@ export const useGameStore = defineStore('game', {
             try {
               const body = seed === null ? {} : { seed }
               const data = await apiFetch('/api/games', { method: 'POST', body: JSON.stringify(body) })
-              
-              // Connect to WebSocket for real-time updates
-              wsClient.connect(data.game.id)
-              wsClient.on('game.update', (update) => {
-                console.log('Received game update:', update)
-                this.handleStateUpdate(update)
-                
-                // If it's AI's turn, trigger AI move
-                if (update.game.current_player_index !== 0 && update.game.status === 'in_progress') {
-                  console.log('Triggering AI move for player', update.game.current_player_index)
-                  this.triggerAiMove()
-                }
-              })
-              
+
+              this.initializeRealtime(data.game.id)
               this.state = data
+              this.scheduleAiMove(data)
             } catch (e) {
               this.error = e.message
             } finally {
@@ -177,13 +253,14 @@ export const useGameStore = defineStore('game', {
             this.resumableGame = null
             try {
               const data = await apiFetch('/api/games/resume', { method: 'GET' })
+              if (!data) {
+                return false
+              }
+
               this.resumableGame = data
               return true
             } catch (e) {
-              // If 404, that's fine, just means no active game
-              if (e.status !== 404) {
-                 console.error('Error checking resume:', e)
-              }
+              console.error('Error checking resume:', e)
               return false
             } finally {
               this.loading = false
@@ -195,19 +272,10 @@ export const useGameStore = defineStore('game', {
 
             const data = this.resumableGame
             this.resumableGame = null // Clear temp state
-            
-            // Connect to WebSocket
-            wsClient.connect(data.game.id)
-            wsClient.on('game.update', (update) => {
-               console.log('Received game update:', update)
-               this.handleStateUpdate(update)
-               
-               if (update.game.current_player_index !== 0 && update.game.status === 'in_progress') {
-                 this.triggerAiMove()
-               }
-            })
-            
+
+            this.initializeRealtime(data.game.id)
             this.state = data
+            this.scheduleAiMove(data)
           },
 
           abandonResume() {
@@ -244,35 +312,6 @@ export const useGameStore = defineStore('game', {
               }
             }, 5000) // Poll every 5 seconds as fallback only
           },
-      
-              async triggerAiMove() {
-                if (!this.gameId || this.processingAiMove) {
-                  return
-                }
-                
-                // Don't trigger if already loading from user action
-                if (this.loading && this.currentPlayerIndex === 0) {
-                  return
-                }
-                
-                this.processingAiMove = true
-                
-                console.log('AI move planned in 1.5s...')
-                
-                setTimeout(async () => {
-                  try {
-                    console.log('Making AI move request...')
-                    await apiFetch(`/api/games/${this.gameId}/ai-play`, {
-                      method: 'POST'
-                    })
-                    console.log('AI move requested')
-                  } catch (e) {
-                    console.error('Error triggering AI move:', e)
-                  } finally {
-                    this.processingAiMove = false
-                  }
-                }, 1500)
-              },      
           stopPolling() {
             if (this.pollingInterval) {
               clearInterval(this.pollingInterval)

@@ -6,6 +6,7 @@ use App\Models\Game;
 use App\Services\Rams\GameService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use RuntimeException;
 
 class GameController extends Controller
@@ -25,7 +26,7 @@ class GameController extends Controller
         return response()->json($this->service->getState($game), 201);
     }
 
-    public function resume(Request $request): JsonResponse
+    public function resume(Request $request): JsonResponse|Response
     {
         $sessionId = $request->header('X-Player-Session-ID');
         if (! $sessionId) {
@@ -35,7 +36,7 @@ class GameController extends Controller
         $game = $this->service->resumeGame($sessionId);
 
         if (! $game) {
-            return response()->json(['message' => 'No active game found'], 404);
+            return response()->noContent();
         }
 
         return response()->json($this->service->getState($game));
