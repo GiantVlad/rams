@@ -129,101 +129,127 @@ const formattedExchangeStatus = computed(() => {
 
 <style scoped>
 .phase-panel {
-  background: #1f2937;
-  border-radius: 12px;
-  padding: 16px;
-  color: white;
+  background: var(--bg-panel);
+  border-radius: 16px;
+  padding: 20px;
+  color: var(--text-main);
   height: 100%;
-  border: 1px solid #374151;
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
 }
 
 .section-title {
-  font-size: 14px;
+  font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #9ca3af;
-  margin-bottom: 8px;
-  font-weight: 700;
-  border-bottom: 1px solid #374151;
-  padding-bottom: 8px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 800;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
 }
 
 .phase-section {
-  background: rgba(255,255,255,0.05);
-  border-radius: 8px;
-  padding: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 16px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .phase-header {
   font-size: 16px;
-  font-weight: bold;
-  color: #60a5fa;
-  margin-bottom: 12px;
+  font-weight: 800;
+  color: var(--accent-blue);
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 8px;
+  letter-spacing: -0.2px;
 }
 
 .info-row {
   display: flex;
   justify-content: space-between;
   font-size: 14px;
-  opacity: 0.8;
-  margin-bottom: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  font-weight: 500;
 }
 
 .val {
-  font-weight: bold;
-  color: white;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .human-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  margin-top: auto;
 }
 
 .action-btn {
   width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  font-weight: 600;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
   border: none;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.action-btn:active {
-  transform: scale(0.98);
+.action-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.action-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .action-btn.primary {
-  background: #3b82f6;
+  background: var(--accent-blue);
   color: white;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
 }
-.action-btn.primary:hover {
-  background: #2563eb;
+.action-btn.primary:hover:not(:disabled) {
+  background: var(--accent-blue-hover);
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
 }
 
 .action-btn.warning {
+  background: var(--accent-gold);
+  color: #000;
+  box-shadow: 0 4px 6px -1px rgba(251, 191, 36, 0.2);
+}
+.action-btn.warning:hover:not(:disabled) {
   background: #f59e0b;
-  color: black;
+  box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.3);
 }
 
 .tip {
   font-size: 12px;
-  opacity: 0.6;
+  color: var(--text-muted);
   text-align: center;
   margin-top: 8px;
+  font-weight: 500;
 }
 
 .highlight {
-  color: #3b82f6;
-  font-weight: bold;
+  color: var(--accent-blue);
+  font-weight: 800;
 }
 
 .system-actions {
@@ -234,28 +260,35 @@ const formattedExchangeStatus = computed(() => {
 
 .sys-btn {
   flex: 1;
-  background: transparent;
-  border: 1px solid #4b5563;
-  color: #9ca3af;
-  font-size: 12px;
+  background: var(--bg-panel-light);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
 
 .sys-btn:hover {
-  background: rgba(255,255,255,0.05);
-  color: white;
+  background: #475569;
+  border-color: #64748b;
 }
 
 .sys-btn.danger:hover {
-  border-color: #ef4444;
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--accent-red);
+  color: var(--accent-red);
 }
 
 .winner-display {
-  font-size: 18px;
-  font-weight: bold;
-  color: #10b981;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent-green);
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  letter-spacing: -0.5px;
 }
 </style>

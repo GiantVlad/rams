@@ -5,12 +5,15 @@
   "main": "websocket-server.js",
   "scripts": {
     "start": "node websocket-server.js",
-    "dev": "nodemon websocket-server.js"
+    "dev": "nodemon websocket-server.js",
+    "qa:e2e:install": "./node_modules/.bin/playwright install chromium",
+    "qa:e2e": "./node_modules/.bin/playwright test --config=playwright.config.js --headed"
   },
   "dependencies": {
     "ws": "^8.19.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "nodemon": "^3.0.2"
   }
 }

@@ -66,85 +66,87 @@ function getPositionClass(playerIndex) {
 }
 
 .trick-center {
-  width: 240px;
-  height: 240px;
+  width: 280px;
+  height: 280px;
   position: relative;
-  /* border: 1px dashed rgba(255,255,255,0.1); */
   border-radius: 50%;
+  background: rgba(0,0,0,0.1); /* Subtle dark circle in the middle */
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
 }
 
 .card-slot {
   position: absolute;
   width: 80px;
   height: 120px;
-  transition: all 0.3s ease-out;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Positions relative to center */
 .pos-bottom {
-  bottom: 0;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 4;
 }
 
 .pos-top {
-  top: 0;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
 }
 
 .pos-left {
-  left: 0;
+  left: 10px;
   top: 50%;
-  transform: translateY(-50%) rotate(90deg);
+  transform: translateY(-50%) rotate(10deg); /* Slight natural rotation */
   z-index: 3;
 }
 
 .pos-right {
-  right: 0;
+  right: 10px;
   top: 50%;
-  transform: translateY(-50%) rotate(-90deg);
+  transform: translateY(-50%) rotate(-10deg);
   z-index: 3;
 }
 
 .slot-label {
   position: absolute;
-  top: -24px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 100%;
   text-align: center;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255,255,255,0.4);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
-
-.pos-bottom .slot-label { top: auto; bottom: -24px; }
-.pos-left .slot-label { transform: rotate(-90deg); top: auto; right: 100%; margin-right: 8px; }
-.pos-right .slot-label { transform: rotate(90deg); top: auto; left: 100%; margin-left: 8px; }
 
 .empty-slot {
   width: 100%;
   height: 100%;
-  border: 2px dashed rgba(255,255,255,0.1);
-  border-radius: 8px;
+  border: 2px dashed rgba(255,255,255,0.15);
+  border-radius: 6px;
   opacity: 0.5;
+  background: rgba(255,255,255,0.02);
 }
 
 .played-card {
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+  animation: playCardIn 0.3s ease-out;
+}
+
+@keyframes playCardIn {
+  from { transform: scale(1.5) translateY(20px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 .card-slot.winner .played-card {
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); /* Gold glow */
-  transform: scale(1.1);
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.8), 0 0 10px rgba(251, 191, 36, 0.4) inset; /* Rich gold glow */
+  transform: scale(1.15) translateY(-10px);
   z-index: 10 !important;
 }
-
-/* Override rotation for cards so they face up? 
-   Actually, in real life, side players play sideways. 
-   But for readability, maybe we want them upright?
-   Let's keep rotation for now, it looks more "table-like".
-*/
 </style>

@@ -82,16 +82,17 @@ const isRed = computed(() => suit.value === 'H' || suit.value === 'D')
   width: 80px;
   height: 120px;
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 8px;
+  padding: 6px;
   box-sizing: border-box;
   position: relative;
-  transition: transform 0.2s, box-shadow 0.2s, top 0.2s;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
   user-select: none;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .card.interactive {
@@ -99,25 +100,28 @@ const isRed = computed(() => suit.value === 'H' || suit.value === 'D')
 }
 
 .card.interactive:hover:not(.disabled) {
-  transform: translateY(-10px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  z-index: 10;
+  transform: translateY(-12px) scale(1.05);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  z-index: 20;
 }
 
 .card.selected {
-  transform: translateY(-15px);
-  box-shadow: 0 0 0 3px #3b82f6; /* Blue ring */
+  transform: translateY(-20px) scale(1.05);
+  box-shadow: 0 0 0 3px #3b82f6, 0 10px 15px -3px rgba(59, 130, 246, 0.5);
 }
 
 .card.disabled {
   opacity: 0.6;
-  filter: grayscale(0.8);
+  filter: grayscale(0.8) contrast(0.8);
   cursor: not-allowed;
 }
 
 .card.faceDown {
-  background-color: #2c3e50;
-  border: 2px solid #ecf0f1;
+  background-color: #1e3a8a; /* Dark Blue back */
+  background-image: url('/images/card_bg.png'); /* Pattern overlay */
+  background-size: cover;
+  border: 4px solid #fff;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .card-back {
@@ -125,20 +129,21 @@ const isRed = computed(() => suit.value === 'H' || suit.value === 'D')
   height: 100%;
   background: repeating-linear-gradient(
     45deg,
-    #2c3e50,
-    #2c3e50 10px,
-    #34495e 10px,
-    #34495e 20px
+    rgba(255,255,255,0.05),
+    rgba(255,255,255,0.05) 10px,
+    transparent 10px,
+    transparent 20px
   );
-  border-radius: 4px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.2);
 }
 
 .red {
-  color: #e74c3c;
+  color: #ef4444; /* Vibrant red */
 }
 
 .black {
-  color: #2c3e50;
+  color: #111827; /* Near black */
 }
 
 .card-content {
@@ -147,6 +152,7 @@ const isRed = computed(() => suit.value === 'H' || suit.value === 'D')
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
 }
 
 .corner {
@@ -154,19 +160,25 @@ const isRed = computed(() => suit.value === 'H' || suit.value === 'D')
   flex-direction: column;
   align-items: center;
   line-height: 1;
-  font-weight: bold;
-  font-size: 18px;
+  font-weight: 800;
+  font-size: 16px;
   position: absolute;
+  letter-spacing: -1px;
+}
+
+.corner .suit {
+  font-size: 14px;
+  margin-top: 1px;
 }
 
 .top-left {
-  top: 6px;
-  left: 6px;
+  top: 2px;
+  left: 2px;
 }
 
 .bottom-right {
-  bottom: 6px;
-  right: 6px;
+  bottom: 2px;
+  right: 2px;
   transform: rotate(180deg);
 }
 
@@ -175,14 +187,16 @@ const isRed = computed(() => suit.value === 'H' || suit.value === 'D')
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 48px;
-  opacity: 0.15;
+  font-size: 52px;
+  opacity: 0.1;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
 .card-placeholder {
-  border: 2px dashed rgba(0,0,0,0.2);
+  border: 2px dashed rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.1);
   width: 100%;
   height: 100%;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 </style>

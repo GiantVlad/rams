@@ -146,21 +146,28 @@ function onCardClick(id) {
   height: 100%;
   padding: 20px;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .felt-surface {
   width: 100%;
-  height: 600px; /* Fixed height for table feel? Or flex? */
-  background-color: #2c5e2e; /* Classic felt green */
-  background-image: radial-gradient(circle at center, #357a38 0%, #2c5e2e 100%);
-  border-radius: 40px;
-  box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.3);
+  max-width: 800px;
+  height: 600px;
+  background-color: #2e5c33; /* Darker base felt */
+  background-image: url('/images/felt_pattern.png'), radial-gradient(circle at center, rgba(76, 175, 80, 0.4) 0%, rgba(27, 94, 32, 0.9) 100%);
+  background-blend-mode: overlay, normal;
+  border-radius: 60px; /* More rounded like a real table */
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.6), 0 20px 40px rgba(0,0,0,0.4);
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: 12px solid #5d4037; /* Wood rim */
+  border: 16px solid #4e342e; /* Richer Wood rim */
+  border-top-color: #5d4037;
+  border-bottom-color: #3e2723;
 }
 
 .trump-zone {
@@ -175,23 +182,31 @@ function onCardClick(id) {
 }
 
 .zone-label {
-  color: rgba(255,255,255,0.6);
-  font-size: 12px;
-  font-weight: bold;
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
 .trump-card {
-  transform: scale(1.1) rotate(-5deg);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+  transform: scale(1.1) rotate(-8deg);
+  box-shadow: -2px 5px 15px rgba(0,0,0,0.5);
+  transition: transform 0.3s;
+}
+
+.trump-card:hover {
+  transform: scale(1.15) rotate(-5deg) translateY(-5px);
+  z-index: 10;
 }
 
 .trump-placeholder {
   width: 80px;
   height: 120px;
-  border: 2px dashed rgba(255,255,255,0.2);
+  border: 2px dashed rgba(255,255,255,0.3);
   border-radius: 8px;
+  background: rgba(0,0,0,0.1);
 }
 
 .seat-pos {
@@ -199,64 +214,72 @@ function onCardClick(id) {
   z-index: 10;
 }
 
-.seat-pos.top { top: 20px; left: 50%; transform: translateX(-50%); }
-.seat-pos.left { left: 20px; top: 50%; transform: translateY(-50%); }
-.seat-pos.right { right: 20px; top: 50%; transform: translateY(-50%); }
+.seat-pos.top { top: 30px; left: 50%; transform: translateX(-50%); }
+.seat-pos.left { left: 30px; top: 50%; transform: translateY(-50%); }
+.seat-pos.right { right: 30px; top: 50%; transform: translateY(-50%); }
 
 .center-area {
   z-index: 1;
-  pointer-events: none; /* Let clicks pass through empty areas if needed */
+  pointer-events: none;
 }
 
 .bottom-area {
   position: absolute;
-  bottom: 30px;
+  bottom: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
   z-index: 20;
 }
 
 .my-seat-info {
-  /* Position absolute to the left of hand or integrated? */
   position: absolute;
   left: 40px;
-  bottom: 0;
+  bottom: 40px; /* Keep it away from hands */
 }
 
 .hand-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
+  transform: translateY(20px); /* Push cards slightly down out of table */
 }
 
 .hand-label {
-  background: rgba(0,0,0,0.5);
-  padding: 4px 12px;
-  border-radius: 12px;
+  background: rgba(17, 24, 39, 0.8);
+  padding: 6px 16px;
+  border-radius: 20px;
   color: white;
   font-size: 14px;
-  backdrop-filter: blur(4px);
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
 }
 
 .turn-alert {
-  color: #fbbf24; /* Amber */
-  font-weight: bold;
+  color: #fbbf24;
+  font-weight: 800;
+  letter-spacing: 1px;
   animation: pulse 1.5s infinite;
 }
 
 .hand-cards {
   display: flex;
-  gap: 10px; /* Slight overlap handled by Card css? No, gap is better for hover */
+  gap: -20px; /* Negative margin for realistic fan overlap */
   padding: 10px;
+  transition: gap 0.3s;
+}
+
+.hand-cards:hover {
+  gap: 5px; /* Spread cards out on hover container */
 }
 
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0% { opacity: 1; text-shadow: 0 0 5px rgba(251, 191, 36, 0.5); }
+  50% { opacity: 0.6; text-shadow: none; }
+  100% { opacity: 1; text-shadow: 0 0 5px rgba(251, 191, 36, 0.5); }
 }
 </style>

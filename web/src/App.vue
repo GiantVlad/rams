@@ -121,18 +121,18 @@ onMounted(async () => {
 }
 
 .modal-card {
-  background: #1f2937;
+  background: var(--bg-panel);
   padding: 30px;
-  border-radius: 12px;
-  border: 1px solid #4b5563;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
   max-width: 400px;
   width: 90%;
   text-align: center;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .modal-card h2 {
-  color: #60a5fa;
+  color: var(--accent-blue);
   margin-top: 0;
 }
 
@@ -144,30 +144,34 @@ onMounted(async () => {
 }
 
 .btn-primary {
-  background: #2563eb;
+  background: var(--accent-blue);
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
+  padding: 12px 24px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--accent-blue-hover);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
   background: transparent;
-  color: #9ca3af;
-  border: 1px solid #4b5563;
-  padding: 10px 20px;
-  border-radius: 6px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 12px 24px;
+  border-radius: 8px;
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 
 .btn-secondary:hover {
-  background: #374151;
+  background: var(--bg-panel-light);
   color: white;
 }
 
@@ -176,52 +180,59 @@ onMounted(async () => {
   flex-direction: column;
   height: 100vh;
   width: 100vw;
-  background: #111827; /* Dark background */
-  color: #e5e7eb;
+  color: var(--text-main);
   overflow: hidden;
+  background: transparent; /* Rely on body background */
 }
 
 .app-header {
-  height: 50px;
-  background: #1f2937;
-  border-bottom: 1px solid #374151;
+  height: 60px;
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 24px;
   flex-shrink: 0;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: bold;
-  font-size: 18px;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.5px;
 }
 
-.logo-icon { color: #60a5fa; }
+.logo-icon { 
+  color: var(--accent-blue); 
+  font-size: 24px;
+}
 
 .status-bar {
   font-family: monospace;
-  opacity: 0.7;
+  opacity: 0.6;
+  font-size: 13px;
 }
 
 .connection-status {
-  font-size: 12px;
+  font-size: 13px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font-weight: 500;
 }
 
-.connection-status.error { color: #ef4444; }
-.online { color: #10b981; }
+.connection-status.error { color: var(--accent-red); }
+.online { color: var(--accent-green); }
 
 .game-layout {
   flex: 1;
   display: flex;
-  padding: 20px;
-  gap: 20px;
+  padding: 24px;
+  gap: 24px;
   overflow: hidden; /* Prevent scrolling, scale table instead */
 }
 
@@ -232,7 +243,7 @@ onMounted(async () => {
 }
 
 .layout-col.left {
-  width: 240px;
+  width: 280px;
   flex-shrink: 0;
 }
 
@@ -242,7 +253,7 @@ onMounted(async () => {
 }
 
 .layout-col.right {
-  width: 240px;
+  width: 280px;
   flex-shrink: 0;
 }
 
@@ -252,7 +263,57 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 30px;
+}
+
+.loading-screen h1 {
+  font-size: 64px;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.loading-screen h1::before {
+  content: '♠';
+  font-size: 72px;
+  color: var(--accent-blue);
+  -webkit-text-fill-color: initial;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.loading-screen p {
+  font-size: 18px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.loading-screen button {
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+}
+
+.loading-screen button:hover {
+  transform: translateY(-4px) scale(1.05);
+  background: var(--accent-blue-hover);
+  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.4);
 }
 
 /* Notification Overlay */
@@ -271,10 +332,10 @@ onMounted(async () => {
 }
 
 .notif-card {
-  background: #1f2937;
+  background: var(--bg-panel);
   padding: 30px;
   border-radius: 16px;
-  border: 2px solid #3b82f6;
+  border: 2px solid var(--accent-blue);
   text-align: center;
   box-shadow: 0 20px 50px rgba(0,0,0,0.5);
   animation: slideUp 0.3s ease-out;
@@ -282,7 +343,7 @@ onMounted(async () => {
 
 .notif-card h3 {
   margin: 0 0 10px 0;
-  color: #60a5fa;
+  color: var(--accent-blue);
 }
 
 .dismiss-hint {
