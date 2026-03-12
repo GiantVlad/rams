@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_DATABASE: ${DB_DATABASE:-rams}
+      MYSQL_USER: ${DB_USERNAME:-rams_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-rams}
+      DB_USERNAME: ${DB_USERNAME:-rams_user}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: database
+    volumes:
+      # Expose the app codebase slightly so Nginx can resolve public/index.php if strictly needed
+      - api_data:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    # Start PHP-FPM and ensure migrations run
+    command: >
+      sh -c "php artisan migrate --force && php-fpm"
+    ports:
+      - "9007:9000"
+
+  websocket:
+    build:
+      context: .
+      dockerfile: docker/websocket.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8087:8080"
+    environment:
+      APP_ENV: production
+
+
+volumes:
+  db_data:
+  api_data:
