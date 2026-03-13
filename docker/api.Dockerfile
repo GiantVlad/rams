@@ -25,7 +25,7 @@ WORKDIR /var/www/html
 COPY ./api /var/www/html
 
 # Install dependencies (ignoring dev dependencies for prod)
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Ensure correct permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
