@@ -34,6 +34,8 @@ services:
       CACHE_STORE: database
       QUEUE_CONNECTION: database
       SESSION_DRIVER: database
+      BROADCAST_CONNECTION: log
+      WEBSOCKET_URL: http://websocket:8080
     volumes:
       # Expose the app codebase slightly so Nginx can resolve public/index.php if strictly needed
       - api_data:/var/www/html
