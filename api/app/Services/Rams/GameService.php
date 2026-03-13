@@ -32,7 +32,8 @@ final class GameService
 
         // Send to WebSocket server via HTTP POST
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, 'http://127.0.0.1:8080/broadcast');
+        $wsUrl = env('WEBSOCKET_URL', 'http://127.0.0.1:8080');
+        curl_setopt($ch, CURLOPT_URL, rtrim($wsUrl, '/') . '/broadcast');
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'gameId' => $game->id,
