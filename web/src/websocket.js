@@ -14,7 +14,8 @@ class WebSocketClient {
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.hostname
-    const wsUrl = `${protocol}//${host}:8080`
+    const isProd = import.meta.env.PROD;
+    const wsUrl = isProd ? `${protocol}//${host}/ws` : `${protocol}//${host}:8080`
     
     console.log('Connecting to WebSocket:', wsUrl)
     

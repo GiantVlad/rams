@@ -1,4 +1,5 @@
-const API_BASE = 'http://localhost:8000'
+const isProd = import.meta.env.PROD;
+const API_BASE = isProd ? '' : 'http://localhost:8000';
 
 function getSessionId() {
   let id = localStorage.getItem('player_session_id')

@@ -66,7 +66,8 @@ wss.on('connection', (ws, request) => {
                     // After subscription, fetch and send current game state to trigger AI moves
                     setTimeout(async () => {
                         try {
-                            const response = await fetch(`http://localhost:8000/api/games/${currentGameId}`);
+                            const apiUrl = process.env.API_URL || 'http://localhost:8000';
+                            const response = await fetch(`${apiUrl}/api/games/${currentGameId}`);
                             const gameState = await response.json();
                             console.log('Fetched game state after subscription:', gameState.game.current_player_index);
                             
