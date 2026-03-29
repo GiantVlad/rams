@@ -1,11 +1,13 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useGameStore } from './stores/game'
 import GameTable from './components/GameTable.vue'
 import ScoreBoard from './components/ScoreBoard.vue'
 import PhasePanel from './components/PhasePanel.vue'
+import RulesPopup from './components/RulesPopup.vue'
 
 const game = useGameStore()
+const showRules = ref(false)
 
 const statusLine = computed(() => {
   if (!game.state) return 'Connecting...'
@@ -38,10 +40,15 @@ onMounted(async () => {
       <div class="status-bar">
         {{ statusLine }}
       </div>
-      <div class="connection-status" :class="{ error: game.error }">
-        <span v-if="game.error">Error: {{ game.error }}</span>
-        <span v-else-if="game.loading">Syncing...</span>
-        <span v-else class="online">● Online</span>
+      <div class="header-actions">
+        <button class="rules-btn" @click="showRules = true" title="How to Play">
+          <span class="icon">ℹ️</span> Rules
+        </button>
+        <div class="connection-status" :class="{ error: game.error }">
+          <span v-if="game.error">Error: {{ game.error }}</span>
+          <span v-else-if="game.loading">Syncing...</span>
+          <span v-else class="online">● Online</span>
+        </div>
       </div>
     </header>
 
@@ -101,6 +108,8 @@ onMounted(async () => {
         </div>
       </div>
     </Transition>
+
+    <RulesPopup v-if="showRules" @close="showRules = false" />
   </div>
 </template>
 
@@ -215,6 +224,31 @@ onMounted(async () => {
   font-family: monospace;
   opacity: 0.6;
   font-size: 13px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.rules-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-main);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.rules-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .connection-status {
