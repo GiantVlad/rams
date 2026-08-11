@@ -10,7 +10,7 @@
     "qa:e2e": "./node_modules/.bin/playwright test --config=playwright.config.js --headed"
   },
   "dependencies": {
-    "ws": "^8.19.0"
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
