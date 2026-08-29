@@ -38,10 +38,6 @@ final class TrickRules
             }
         }
 
-        // Debug: Log what we found
-        error_log('Debug: leadingSuit='.($leadingSuit?->name ?? 'null').', trumpSuit='.($trumpSuit?->name ?? 'null').', hasLeadingSuit='.($hasLeadingSuit ? 'true' : 'false').', hasTrump='.($hasTrump ? 'true' : 'false'));
-        error_log('Debug: cardToPlay suit='.$cardToPlay->suit->name);
-
         if ($hasLeadingSuit && $cardToPlay->suit !== $leadingSuit) {
             throw new RuntimeException('Must follow suit when possible.');
         }

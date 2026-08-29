@@ -86,7 +86,7 @@ const formattedExchangeStatus = computed(() => {
       <div class="phase-header">Play Phase</div>
       
       <!-- Jacks Declaration -->
-      <div v-if="game.humanHasJacks && game.isHumanTurn" class="special-action">
+      <div v-if="game.humanHasJacks && game.isHumanTurn && !game.jacksAlreadyDeclared" class="special-action">
         <div class="action-title">Special Move</div>
         <p>You have two Jacks of {{ game.humanHasJacks }}!</p>
         <button 
@@ -96,6 +96,12 @@ const formattedExchangeStatus = computed(() => {
         >
           Declare Jacks (-5 Pile)
         </button>
+      </div>
+      
+      <!-- Boys Announcement -->
+      <div v-if="game.boysAnnouncement" class="special-action">
+        <div class="action-title">Boys Announcement</div>
+        <p>{{ game.boysAnnouncement }}</p>
       </div>
       
       <div class="phase-body" v-else>

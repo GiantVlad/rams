@@ -19,7 +19,8 @@ final class Scoring
         array $maltzyCountByPlayer,
         array $currentPileByPlayer,
         array $passedPlayers = [],
-        int $players = 4
+        int $players = 4,
+        array $partiyaDeclaredBy = []
     ): array {
         if (count($tricksWonByPlayer) !== $players) {
             throw new RuntimeException("Expected {$players} trick counts.");
@@ -37,17 +38,15 @@ final class Scoring
             $maltzy = $maltzyCountByPlayer[$i] ?? 0;
             $pile = $currentPileByPlayer[$i] ?? 20;
 
-            if ($tricks < 0 || $tricks > 4) {
-                // throw new RuntimeException("Tricks won must be between 0 and 4 for player {$i}.");
-                // Allow >4 if we handle it elsewhere? No, tricks per round is limited.
-                // But passed players have 0.
+            if ($tricks < 0 || $tricks > 5) {
+                throw new RuntimeException("Tricks won must be between 0 and 5 for player {$i}.");
             }
 
             // Reduce pile by tricks won
             $newPile = $pile - $tricks;
 
             // Penalty for playing but winning no tricks
-            if ($tricks === 0 && ! in_array($i, $passedPlayers)) {
+            if ($tricks === 0 && ! in_array($i, $passedPlayers) && empty($partiyaDeclaredBy[$i])) {
                 $newPile += 5;
             }
 
@@ -108,11 +107,11 @@ final class Scoring
         // Tie-break: player who reached this pile later (higher round index)
         $maxRound = -1;
         $winner = $candidates[0];
-        foreach ($candidates as $i) {
-            $round = $roundWhenPileReached[$i] ?? -1;
-            if ($round > $maxRound) {
-                $maxRound = $round;
-                $winner = $i;
+        foreach ($candidates as $candidate) {
+            $roundIndex = $roundWhenPileReached[$candidate] ?? -1;
+            if ($roundIndex > $maxRound) {
+                $maxRound = $roundIndex;
+                $winner = $candidate;
             }
         }
 

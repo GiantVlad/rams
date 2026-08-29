@@ -22,6 +22,47 @@ final class GameService
 {
     public function __construct(private readonly AiService $ai) {}
 
+    public function declarePartiya(Game $game, int $playerIndex): Game
+    {
+        return DB::transaction(function () use ($game, $playerIndex) {
+            $game->refresh();
+
+            if ($game->status !== 'in_progress') {
+                throw new RuntimeException('Game is not in progress.');
+            }
+
+            if ($game->phase !== 'play') {
+                throw new RuntimeException('Partiya can only be declared during play phase.');
+            }
+
+            $player = $game->players()->where('seat_index', $playerIndex)->first();
+            if (! $player) {
+                throw new RuntimeException('Player not found.');
+            }
+
+            $round = $game->currentRound();
+            if (! $round) {
+                throw new RuntimeException('No active round.');
+            }
+
+            if (($round->partiya_declared_by ?? [])[$playerIndex] ?? false) {
+                throw new RuntimeException('Partiya already declared by this player this round.');
+            }
+
+            $tricksSoFar = ($round->taken[$playerIndex] ?? 0);
+            if (! Scoring::mustDeclarePartiya($player->pile, $tricksSoFar)) {
+                throw new RuntimeException('You do not need to declare Partiya now.');
+            }
+
+            $declared = $round->partiya_declared_by ?? [];
+            $declared[$playerIndex] = true;
+            $round->partiya_declared_by = $declared;
+            $round->save();
+
+            return $game->fresh(['players', 'rounds']);
+        });
+    }
+
     private function broadcastGameUpdate(Game $game, string $event = 'update', ?array $extraData = null): void
     {
         $state = $this->getState($game);
@@ -248,29 +289,16 @@ final class GameService
             $discardSet = array_flip($discardCardIds);
             $newHand = array_values(array_filter($handCardIds, fn ($id) => ! isset($discardSet[$id])));
 
-            error_log("Exchange Debug - Player {$playerIndex}:");
-            error_log('  Original hand: '.json_encode($handCardIds));
-            error_log('  Discarding: '.json_encode($discardCardIds));
-            error_log('  After discard: '.json_encode($newHand));
-
             // Use the stored remaining deck for exchanges
             $remainingDeckCards = $round->remaining_deck ?? [];
-
-            error_log('  Cards in remaining deck: '.count($remainingDeckCards));
 
             // Draw new cards to replace discarded ones
             for ($i = 0; $i < count($discardCardIds); $i++) {
                 if (! empty($remainingDeckCards)) {
                     $newCardId = array_shift($remainingDeckCards);
                     $newHand[] = $newCardId;
-                    error_log('  Drew card: '.$newCardId);
                 }
             }
-
-            // Update the remaining deck in the round
-            $round->remaining_deck = $remainingDeckCards;
-
-            error_log('  Final hand: '.json_encode($newHand));
 
             // Update the hand in the hands array
             $hands[$playerIndex] = $newHand;
@@ -417,9 +445,41 @@ final class GameService
                 throw new RuntimeException('Jacks can only be declared during play phase.');
             }
 
+            $round = $game->currentRound();
+            if (! $round) {
+                throw new RuntimeException('Game has no active round.');
+            }
+
             $player = $game->players()->where('seat_index', $playerIndex)->first();
             if (! $player) {
                 throw new RuntimeException('Player not found.');
+            }
+
+            // Validate the player's hand contains a same-color Jack pair
+            $hands = $round->hands;
+            $handCardIds = $hands[$playerIndex] ?? [];
+            $hasBoysPair = false;
+            $redCount = 0;
+            $blackCount = 0;
+            foreach ($handCardIds as $cardId) {
+                $card = CardCodec::decodeId($cardId);
+                if ($card->rank === Rank::Jack) {
+                    if (in_array($card->suit, [Suit::Hearts, Suit::Diamonds])) {
+                        $redCount++;
+                    } elseif (in_array($card->suit, [Suit::Spades, Suit::Clubs])) {
+                        $blackCount++;
+                    }
+                }
+            }
+            if ($redCount >= 2 || $blackCount >= 2) {
+                $hasBoysPair = true;
+            }
+            if (! $hasBoysPair) {
+                throw new RuntimeException('No same-color Jack pair in hand.');
+            }
+
+            if ($player->pile === 5) {
+                throw new RuntimeException('Jacks already declared.');
             }
 
             // Reduce pile to 5 and increment jacks count
@@ -597,7 +657,8 @@ final class GameService
             $maltzyCounts[$seat] = $player->maltzy_count ?? 0;
         }
 
-        $newPiles = Scoring::applyRoundScoring($taken, $maltzyCounts, $piles, $passedPlayers, 4);
+        $partiyaDeclaredBy = $round->partiya_declared_by ?? [];
+        $newPiles = Scoring::applyRoundScoring($taken, $maltzyCounts, $piles, $passedPlayers, 4, $partiyaDeclaredBy);
 
         foreach ($newPiles as $seat => $newPile) {
             $player = $players->get($seat);
@@ -653,6 +714,20 @@ final class GameService
             $round = $game->currentRound();
             if (! $round) {
                 return $game;
+            }
+            // AI declares partiya if eligible (once per round, guarded by service)
+            if ($currentIndex !== 0) {
+                $player = $game->players()->where('seat_index', $currentIndex)->first();
+                $tricksSoFar = ($round->taken[$currentIndex] ?? 0);
+                if ($player && $this->ai->shouldDeclarePartiya($round->hands[$currentIndex] ?? [], $player->pile ?? 20, $tricksSoFar)) {
+                    try {
+                        $this->declarePartiya($game, $currentIndex);
+
+                        return $game->fresh(['players', 'rounds']);
+                    } catch (RuntimeException $e) {
+                        // Already declared or not eligible — proceed to play
+                    }
+                }
             }
             $hands = $round->hands;
             $hand = $hands[$currentIndex] ?? [];

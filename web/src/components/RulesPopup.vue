@@ -5,7 +5,7 @@
         <h2>How to Play Rams</h2>
         <button class="close-btn" @click="$emit('close')">&times;</button>
       </header>
-      
+
       <div class="rules-content">
         <section>
           <h3>1. The Goal</h3>
@@ -26,6 +26,7 @@
             <li>You must follow suit if possible.</li>
             <li>If you cannot follow suit, you can play a trump card or any other card.</li>
             <li>The highest card of the led suit, or the highest trump card, wins the trick.</li>
+            <li>5 tricks are played each round.</li>
           </ul>
         </section>
 
@@ -35,6 +36,17 @@
             <li>Each trick won reduces your score by 1 point.</li>
             <li>If you play in a round but win <strong>0 tricks</strong>, you receive a <strong>+5 point penalty</strong>.</li>
             <li>If you are dealt 5 cards of the same suit, you immediately lose 5 points.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>5. Jacks (Boys), Partiya & Passing</h3>
+          <ul>
+            <li><strong>Boys (Jacks):</strong> If dealt two Jacks of the same color (red: ♥ + ♦, black: ♠ + ♣), you get a "Boys" pair. Each Jack played from the pair announces "first Jack came out" / "second Jack came out." At round end, each Boys pair adds 1 to your <strong>maltzy count</strong> (a -5 pile penalty).</li>
+            <li><strong>Declare Jacks:</strong> You may declare a Boys pair during your turn to immediately reduce your pile to 5 (instead of waiting for round-end deduction).</li>
+            <li><strong>Partiya:</strong> If your pile is ≤5 and the tricks you still need to reach 0 equal your remaining tricks, you must declare Partiya — you commit to reaching 0 this round. Failing it adds a +5 penalty.</li>
+            <li><strong>Passing:</strong> During the participation phase, a player may pass and sit out the round. Passed players do not play tricks and are exempt from the 0-trick penalty.</li>
+            <li><strong>Five Same Suit:</strong> Being dealt 5 cards of the same suit triggers an immediate win (pile reduced by 5; others stay the same). If all 5 are trump, others also lose 5.</li>
           </ul>
         </section>
       </div>

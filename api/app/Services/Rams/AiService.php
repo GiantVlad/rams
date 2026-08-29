@@ -4,6 +4,7 @@ namespace App\Services\Rams;
 
 use App\Domain\Rams\CardCodec;
 use App\Domain\Rams\Rank;
+use App\Domain\Rams\Scoring;
 use App\Domain\Rams\Suit;
 
 final class AiService
@@ -256,5 +257,10 @@ final class AiService
 
         // Play if hand has at least one Trump or one Ace
         return $hasTrump || $hasAce;
+    }
+
+    public function shouldDeclarePartiya(array $handCardIds, int $pile, int $tricksSoFar): bool
+    {
+        return Scoring::mustDeclarePartiya($pile, $tricksSoFar);
     }
 }

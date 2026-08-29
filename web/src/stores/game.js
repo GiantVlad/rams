@@ -17,6 +17,7 @@ export const useGameStore = defineStore('game', {
           pendingAiMoveKey: null,
           pendingUpdates: [],
           isDisplayingTrickResult: false,
+          boysAnnouncement: null,
         }),
         getters: {
           gameId: (s) => s.state?.game?.id ?? null,
@@ -48,19 +49,26 @@ export const useGameStore = defineStore('game', {
           exchangeStatus: (s) => s.state?.exchangeStatus ?? null,
           passedPlayers: (s) => s.state?.round?.passed_players ?? [],
           humanHasJacks: (s) => {
-            const hand = s.hand
+            const hand = s.state?.round?.hands?.[0]
             if (!Array.isArray(hand) || hand.length !== 5) return null
-            const suitCounts = {}
+            let redJacks = 0
+            let blackJacks = 0
             for (const id of hand) {
               if (!id || typeof id !== 'string') continue
-              const [suit, rank] = id.split('-')
-              if (rank === '11') { // Jack
-                suitCounts[suit] = (suitCounts[suit] || 0) + 1
-                if (suitCounts[suit] >= 2) return suit
-              }
+              const suit = id.split('-')[0]
+              if (suit === 'H' || suit === 'D') redJacks++
+              else if (suit === 'S' || suit === 'C') blackJacks++
             }
+            if (redJacks >= 2) return 'red'
+            if (blackJacks >= 2) return 'black'
             return null
           },
+          jacksAlreadyDeclared: (s) => {
+            const declaredBy = s.state?.round?.partiya_declared_by ?? {}
+            // Returns true if seat 0 (human) already declared Jacks this round
+            return Boolean(declaredBy[0])
+          },
+          boysAnnouncement: (s) => s.boysAnnouncement ?? null,
           roundWinner: (s) => {
               if (!s.lastRoundTaken) return null
               let maxTricks = -1
@@ -184,6 +192,11 @@ export const useGameStore = defineStore('game', {
               // Apply state logic
               this.applyState(newState)
               this.scheduleAiMove(newState)
+
+              // Extract boys announcement if present
+              if (newState?.message && newState.playerIndex !== undefined) {
+                  this.boysAnnouncement = newState.message
+              }
 
               // Check if this new state is a "Full Trick" that requires a viewing pause
               if (newState?.round?.current_trick) {
@@ -414,6 +427,7 @@ export const useGameStore = defineStore('game', {
       
           dismissRoundResult() {
             this.justFinishedRound = null
+            this.boysAnnouncement = null
           },
         },
       })

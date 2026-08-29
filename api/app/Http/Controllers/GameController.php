@@ -109,15 +109,27 @@ class GameController extends Controller
             'player_index' => ['required', 'integer', 'min:0', 'max:3'],
         ]);
 
-        $playerIndex = $validated['player_index'];
-        $this->service->declareJacks($game, $playerIndex);
+        try {
+            $this->service->declareJacks($game, $validated['player_index']);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json(['success' => true]);
     }
 
     public function declarePartiya(Request $request, Game $game): JsonResponse
     {
-        // TODO: Implement partiya declaration logic
-        return response()->json(['message' => 'Partiya declaration not yet implemented'], 501);
+        $validated = $request->validate([
+            'player_index' => ['required', 'integer', 'min:0', 'max:3'],
+        ]);
+
+        try {
+            $this->service->declarePartiya($game, $validated['player_index']);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['success' => true]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Game;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -106,5 +107,102 @@ class RamsGameApiTest extends TestCase
         $nextPlayer = $state->json('game.current_player_index');
         $this->assertNotEquals($currentPlayer, $nextPlayer);
         $this->assertCount(1, $state->json('round.current_trick'));
+    }
+
+    public function test_declare_partiya_flow(): void
+    {
+        $create = $this->postJson('/api/games', ['seed' => 123]);
+        $gameId = $create->json('game.id');
+
+        // Complete exchange and participation so we reach play phase
+        for ($i = 1; $i <= 3; $i++) {
+            $this->postJson("/api/games/{$gameId}/exchange", ['player_index' => $i, 'discard_card_ids' => []])->assertOk();
+        }
+        $this->postJson("/api/games/{$gameId}/exchange", ['player_index' => 0, 'discard_card_ids' => []])->assertOk();
+        for ($i = 1; $i <= 3; $i++) {
+            $this->postJson("/api/games/{$gameId}/participation", ['player_index' => $i, 'play' => true])->assertOk();
+        }
+        $this->postJson("/api/games/{$gameId}/participation", ['player_index' => 0, 'play' => true])->assertOk();
+
+        $state = $this->getJson("/api/games/{$gameId}");
+        $this->assertSame('play', $state->json('game.phase'));
+
+        // Find a player whose pile is 5 and has enough tricks remaining to declare
+        // Players start at pile 20, so partiya should be rejected (not eligible)
+        $res = $this->postJson("/api/games/{$gameId}/declare-partiya", ['player_index' => 1]);
+        $res->assertStatus(422);
+        $this->assertStringContainsString('do not need', $res->json('message'));
+    }
+
+    public function test_declare_partiya_already_declared_returns_422(): void
+    {
+        $create = $this->postJson('/api/games', ['seed' => 123]);
+        $gameId = $create->json('game.id');
+
+        // Complete exchange and participation
+        for ($i = 1; $i <= 3; $i++) {
+            $this->postJson("/api/games/{$gameId}/exchange", ['player_index' => $i, 'discard_card_ids' => []])->assertOk();
+        }
+        $this->postJson("/api/games/{$gameId}/exchange", ['player_index' => 0, 'discard_card_ids' => []])->assertOk();
+        for ($i = 1; $i <= 3; $i++) {
+            $this->postJson("/api/games/{$gameId}/participation", ['player_index' => $i, 'play' => true])->assertOk();
+        }
+        $this->postJson("/api/games/{$gameId}/participation", ['player_index' => 0, 'play' => true])->assertOk();
+
+        // Manually set up a player (seat 1) as eligible by reducing pile to 5 and 0 tricks
+        $game = Game::find($gameId);
+        $player = $game->players()->where('seat_index', 1)->first();
+        $player->pile = 5;
+        $player->save();
+        $round = $game->currentRound();
+        $taken = $round->taken;
+        $taken[1] = 0;
+        $round->taken = $taken;
+        $round->save();
+
+        // First declaration succeeds
+        $this->postJson("/api/games/{$gameId}/declare-partiya", ['player_index' => 1])->assertOk();
+
+        // Second declaration fails
+        $res = $this->postJson("/api/games/{$gameId}/declare-partiya", ['player_index' => 1]);
+        $res->assertStatus(422);
+        $this->assertStringContainsString('already declared', $res->json('message'));
+    }
+
+    public function test_declare_jacks_flow(): void
+    {
+        $create = $this->postJson('/api/games', ['seed' => 123]);
+        $gameId = $create->json('game.id');
+
+        // Complete exchange and participation so we reach play phase
+        for ($i = 1; $i <= 3; $i++) {
+            $this->postJson("/api/games/{$gameId}/exchange", ['player_index' => $i, 'discard_card_ids' => []])->assertOk();
+        }
+        $this->postJson("/api/games/{$gameId}/exchange", ['player_index' => 0, 'discard_card_ids' => []])->assertOk();
+        for ($i = 1; $i <= 3; $i++) {
+            $this->postJson("/api/games/{$gameId}/participation", ['player_index' => $i, 'play' => true])->assertOk();
+        }
+        $this->postJson("/api/games/{$gameId}/participation", ['player_index' => 0, 'play' => true])->assertOk();
+
+        $state = $this->getJson("/api/games/{$gameId}");
+        $this->assertSame('play', $state->json('game.phase'));
+
+        // Invalid player_index is rejected by validation
+        $res = $this->postJson("/api/games/{$gameId}/declare-jacks", ['player_index' => 4]);
+        $res->assertStatus(422);
+
+        // First declaration succeeds (pile goes from 20 to 5)
+        // Declaration depends on random hand: may succeed (eligible) or fail (no pair)
+        $res = $this->postJson("/api/games/{}/declare-jacks", ["player_index" => 0]);
+        if ($res->getStatusCode() === 200) {
+            // If eligible, second call is duplicate and fails
+            $res2 = $this->postJson("/api/games/{}/declare-jacks", ["player_index" => 0]);
+            $res2->assertStatus(422);
+        } else {
+            // If ineligible (no Boys pair), expect 422 with appropriate message
+            $res->assertStatus(422);
+        }
+    }
+        $this->assertStringContainsString('already declared', $res->json('message'));
     }
 }
