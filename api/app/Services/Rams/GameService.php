@@ -7,6 +7,7 @@ use App\Domain\Rams\CardCodec;
 use App\Domain\Rams\Dealing;
 use App\Domain\Rams\Deck;
 use App\Domain\Rams\Exchange;
+use App\Domain\Rams\Rank;
 use App\Domain\Rams\Scoring;
 use App\Domain\Rams\Suit;
 use App\Domain\Rams\TrickRules;
@@ -492,10 +493,10 @@ final class GameService
             // Check Boys Announcement
             $boysState = $round->boys_state;
             if ($boysState && isset($boysState[$playerIndex])) {
-                if ($cardToPlay->rank === \App\Domain\Rams\Rank::Jack) {
+                if ($cardToPlay->rank === Rank::Jack) {
                     $color = match ($cardToPlay->suit) {
-                        \App\Domain\Rams\Suit::Hearts, \App\Domain\Rams\Suit::Diamonds => 'red',
-                        \App\Domain\Rams\Suit::Spades, \App\Domain\Rams\Suit::Clubs => 'black',
+                        Suit::Hearts, Suit::Diamonds => 'red',
+                        Suit::Spades, Suit::Clubs => 'black',
                     };
 
                     if (isset($boysState[$playerIndex][$color])) {
@@ -804,17 +805,17 @@ final class GameService
             $hasJackC = false;
 
             foreach ($cards as $card) {
-                if ($card->rank === \App\Domain\Rams\Rank::Jack) {
-                    if ($card->suit === \App\Domain\Rams\Suit::Hearts) {
+                if ($card->rank === Rank::Jack) {
+                    if ($card->suit === Suit::Hearts) {
                         $hasJackH = true;
                     }
-                    if ($card->suit === \App\Domain\Rams\Suit::Diamonds) {
+                    if ($card->suit === Suit::Diamonds) {
                         $hasJackD = true;
                     }
-                    if ($card->suit === \App\Domain\Rams\Suit::Spades) {
+                    if ($card->suit === Suit::Spades) {
                         $hasJackS = true;
                     }
-                    if ($card->suit === \App\Domain\Rams\Suit::Clubs) {
+                    if ($card->suit === Suit::Clubs) {
                         $hasJackC = true;
                     }
                 }

@@ -3,6 +3,8 @@
 namespace App\Domain\Rams;
 
 use InvalidArgumentException;
+use Random\Engine\Mt19937;
+use Random\Randomizer;
 use RuntimeException;
 
 final class Deck
@@ -68,8 +70,8 @@ final class Deck
             throw new InvalidArgumentException('Seed must be a non-negative integer.');
         }
 
-        $engine = new \Random\Engine\Mt19937($seed);
-        $randomizer = new \Random\Randomizer($engine);
+        $engine = new Mt19937($seed);
+        $randomizer = new Randomizer($engine);
         $this->cards = $randomizer->shuffleArray($this->cards);
     }
 
